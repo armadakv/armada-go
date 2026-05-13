@@ -2,8 +2,8 @@ go 1.22
 
 use (
 	.
-	plugin/rprom
-	plugin/rzap
 	plugin/rlogrus
 	plugin/rotel
+	plugin/rprom
+	plugin/rzap
 )

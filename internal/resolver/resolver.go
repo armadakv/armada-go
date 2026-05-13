@@ -3,31 +3,31 @@
 package resolver
 
 import (
-	"github.com/jamf/regatta-go/internal/endpoint"
+	"github.com/armadakv/armada-go/internal/endpoint"
 	"google.golang.org/grpc/resolver"
 	"google.golang.org/grpc/resolver/manual"
 	"google.golang.org/grpc/serviceconfig"
 )
 
 const (
-	Schema = "regatta-endpoints"
+	Schema = "armada-endpoints"
 )
 
-// RegattaManualResolver is a Resolver (and resolver.Builder) that can be updated
+// ArmadaManualResolver is a Resolver (and resolver.Builder) that can be updated
 // using SetEndpoints.
-type RegattaManualResolver struct {
+type ArmadaManualResolver struct {
 	*manual.Resolver
 	endpoints     []string
 	serviceConfig *serviceconfig.ParseResult
 }
 
-func New(endpoints ...string) *RegattaManualResolver {
+func New(endpoints ...string) *ArmadaManualResolver {
 	r := manual.NewBuilderWithScheme(Schema)
-	return &RegattaManualResolver{Resolver: r, endpoints: endpoints, serviceConfig: nil}
+	return &ArmadaManualResolver{Resolver: r, endpoints: endpoints, serviceConfig: nil}
 }
 
 // Build returns itself for Resolver, because it's both a builder and a resolver.
-func (r *RegattaManualResolver) Build(target resolver.Target, cc resolver.ClientConn, opts resolver.BuildOptions) (resolver.Resolver, error) {
+func (r *ArmadaManualResolver) Build(target resolver.Target, cc resolver.ClientConn, opts resolver.BuildOptions) (resolver.Resolver, error) {
 	r.serviceConfig = cc.ParseServiceConfig(`{"loadBalancingPolicy": "round_robin"}`)
 	if r.serviceConfig.Err != nil {
 		return nil, r.serviceConfig.Err
@@ -41,12 +41,12 @@ func (r *RegattaManualResolver) Build(target resolver.Target, cc resolver.Client
 	return res, nil
 }
 
-func (r *RegattaManualResolver) SetEndpoints(endpoints []string) {
+func (r *ArmadaManualResolver) SetEndpoints(endpoints []string) {
 	r.endpoints = endpoints
 	r.updateState()
 }
 
-func (r *RegattaManualResolver) updateState() {
+func (r *ArmadaManualResolver) updateState() {
 	if r.CC != nil {
 		addresses := make([]resolver.Address, len(r.endpoints))
 		for i, ep := range r.endpoints {

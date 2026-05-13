@@ -8,6 +8,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/armadakv/armada-go/credentials"
 	"google.golang.org/grpc"
 )
 
@@ -33,18 +34,21 @@ type config struct {
 	// MaxCallSendMsgSize is the client-side request send limit in bytes.
 	// If 0, it defaults to 2.0 MiB (2 * 1024 * 1024).
 	// Make sure that "MaxCallSendMsgSize" < server-side default send/recv limit.
-	// ("--api.max-request-bytes" flag to regatta or "embed.Config.MaxRequestBytes").
+	// ("--api.max-request-bytes" flag to Armada or "embed.Config.MaxRequestBytes").
 	MaxCallSendMsgSize int
 
 	// MaxCallRecvMsgSize is the client-side response receive limit.
 	// If 0, it defaults to "math.MaxInt32", because range response can
 	// easily exceed request send limits.
 	// Make sure that "MaxCallRecvMsgSize" >= server-side default send/recv limit.
-	// ("--api.max-recv-bytes" flag to regatta).
+	// ("--api.max-recv-bytes" flag to Armada).
 	MaxCallRecvMsgSize int
 
 	// TLS holds the client secure credentials, if any.
 	TLS *tls.Config
+
+	// Auth holds request authentication configuration, if any.
+	Auth *AuthConfig
 
 	// DialOptions is a list of dial options for the grpc client (e.g., for interceptors).
 	// For example, pass "grpc.WithBlock()" to block until the underlying connection is up.
@@ -75,6 +79,36 @@ type SecureConfig struct {
 
 	InsecureTransport  bool `json:"insecure-transport"`
 	InsecureSkipVerify bool `json:"insecure-skip-tls-verify"`
+}
+
+// AuthTokenProvider resolves auth tokens for requests made by the client.
+type AuthTokenProvider func(ctx context.Context) (string, error)
+
+// AuthConfig defines request authentication metadata attached to outgoing RPCs.
+type AuthConfig struct {
+	Header                   string
+	Scheme                   string
+	Token                    string
+	Provider                 AuthTokenProvider
+	RequireTransportSecurity bool
+}
+
+func (cfg *AuthConfig) credentialConfig() credentials.Config {
+	credentialConfig := credentials.Config{
+		Token:                    cfg.Token,
+		TokenFieldName:           cfg.Header,
+		TokenType:                cfg.Scheme,
+		RequireTransportSecurity: cfg.RequireTransportSecurity,
+	}
+	if cfg.Provider != nil {
+		credentialConfig.TokenProvider = credentials.TokenProviderFunc(cfg.Provider)
+	}
+
+	return credentialConfig
+}
+
+func (cfg *AuthConfig) hasPerRPCCredentials() bool {
+	return cfg != nil && (cfg.Token != "" || cfg.Provider != nil)
 }
 
 func newTLSConfig(scfg *SecureConfig, lg Logger) *tls.Config {
@@ -210,11 +244,44 @@ func WithSecureConfig(sc *SecureConfig) Option {
 	}
 }
 
+// WithAuthConfig configures request authentication metadata for outgoing RPCs.
+func WithAuthConfig(auth *AuthConfig) Option {
+	return func(config *config) {
+		if auth == nil {
+			config.Auth = nil
+			return
+		}
+
+		authCopy := *auth
+		config.Auth = &authCopy
+	}
+}
+
+// WithBearerToken configures Authorization: Bearer metadata for outgoing RPCs.
+func WithBearerToken(token string) Option {
+	return WithAuthConfig(&AuthConfig{
+		Header:                   credentials.AuthorizationFieldNameGRPC,
+		Scheme:                   credentials.BearerTokenType,
+		Token:                    token,
+		RequireTransportSecurity: true,
+	})
+}
+
+// WithBearerTokenProvider resolves Authorization: Bearer metadata for outgoing RPCs on demand.
+func WithBearerTokenProvider(provider AuthTokenProvider) Option {
+	return WithAuthConfig(&AuthConfig{
+		Header:                   credentials.AuthorizationFieldNameGRPC,
+		Scheme:                   credentials.BearerTokenType,
+		Provider:                 provider,
+		RequireTransportSecurity: true,
+	})
+}
+
 // WithMaxCallRecvMsgSize sets the client-side response receive limit.
 // If 0, it defaults to "math.MaxInt32", because range response can
 // easily exceed request send limits.
 // Make sure that "MaxCallRecvMsgSize" >= server-side default send/recv limit.
-// ("--api.max-recv-bytes" flag to regatta).
+// ("--api.max-recv-bytes" flag to Armada).
 func WithMaxCallRecvMsgSize(max int) Option {
 	return func(config *config) {
 		config.MaxCallRecvMsgSize = max
@@ -224,7 +291,7 @@ func WithMaxCallRecvMsgSize(max int) Option {
 // WithMaxCallSendMsgSize sets the client-side request send limit in bytes.
 // If 0, it defaults to 2.0 MiB (2 * 1024 * 1024).
 // Make sure that "MaxCallSendMsgSize" < server-side default send/recv limit.
-// ("--api.max-send-bytes" flag to regatta or "embed.Config.MaxRequestBytes").
+// ("--api.max-send-bytes" flag to Armada or "embed.Config.MaxRequestBytes").
 func WithMaxCallSendMsgSize(max int) Option {
 	return func(config *config) {
 		config.MaxCallSendMsgSize = max

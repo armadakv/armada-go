@@ -1,4 +1,4 @@
-module github.com/jamf/regatta-go
+module github.com/armadakv/armada-go
 
 go 1.22
 

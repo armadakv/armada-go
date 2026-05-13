@@ -10,7 +10,7 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/jamf/regatta-go/internal/proto"
+	"github.com/armadakv/armada-go/internal/proto"
 	"google.golang.org/grpc"
 )
 
@@ -122,7 +122,7 @@ func (resp *TxnResponse) String() string {
 }
 
 type Table interface {
-	// Put puts a key-value pair into regatta.
+	// Put puts a key-value pair into Armada.
 	// Note that key,value can be plain bytes array and string is
 	// an immutable representation of that bytes array.
 	// To get a string of bytes, do string([]byte{0x10, 0x20}).
@@ -158,7 +158,7 @@ type Table interface {
 }
 
 type KV interface {
-	// Put puts a key-value pair into regatta.
+	// Put puts a key-value pair into Armada.
 	// Note that key,value can be plain bytes array and string is
 	// an immutable representation of that bytes array.
 	// To get a string of bytes, do string([]byte{0x10, 0x20}).

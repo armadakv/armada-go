@@ -1,6 +1,6 @@
 // Copyright JAMF Software, LLC
 
-// Package client implements the official Go regatta client.
+// Package client implements the official Go Armada client.
 //
 // Create client using `client.New`:
 //
