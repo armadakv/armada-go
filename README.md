@@ -58,6 +58,9 @@ The client supports Armada identity tokens via `Authorization: Bearer` metadata:
 c, err := client.New(
 	client.WithEndpoints("127.0.0.1:8443"),
 	client.WithBearerToken(os.Getenv("ARMADA_TOKEN")),
+	client.WithSecureConfig(&client.SecureConfig{
+		InsecureSkipVerify: true, // Skip verification of self-signed certificate
+	}),
 )
 ```
 
