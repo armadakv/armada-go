@@ -11,9 +11,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/jamf/regatta-go/credentials"
-	"github.com/jamf/regatta-go/internal/endpoint"
-	"github.com/jamf/regatta-go/internal/resolver"
+	"github.com/armadakv/armada-go/credentials"
+	"github.com/armadakv/armada-go/internal/endpoint"
+	"github.com/armadakv/armada-go/internal/resolver"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/connectivity"
@@ -25,13 +25,13 @@ import (
 )
 
 var (
-	ErrNoAvailableEndpoints = errors.New("regattaclient: no available endpoints")
-	ErrOldCluster           = errors.New("regattaclient: old cluster version")
+	ErrNoAvailableEndpoints = errors.New("armadaclient: no available endpoints")
+	ErrOldCluster           = errors.New("armadaclient: old cluster version")
 )
 
 var Version = "unknown"
 
-// Client provides and manages an regatta client session.
+// Client provides and manages an Armada client session.
 type Client struct {
 	KV
 	Cluster
@@ -41,7 +41,7 @@ type Client struct {
 
 	cfg      config
 	creds    grpccredentials.TransportCredentials
-	resolver *resolver.RegattaManualResolver
+	resolver *resolver.ArmadaManualResolver
 
 	epMu      sync.RWMutex
 	endpoints []string
@@ -57,7 +57,7 @@ type Client struct {
 	lg   Logger
 }
 
-// New creates a new regatta client from a given configuration.
+// New creates a new Armada client from a given configuration.
 func New(opts ...Option) (*Client, error) {
 	cfg := &config{}
 	for _, opt := range opts {
@@ -66,7 +66,7 @@ func New(opts ...Option) (*Client, error) {
 	return newClient(cfg)
 }
 
-// NewFromURL creates a new regatta client from a URL.
+// NewFromURL creates a new Armada client from a URL.
 func NewFromURL(url string, opts ...Option) (*Client, error) {
 	cfg := &config{Endpoints: []string{url}}
 	for _, opt := range opts {
@@ -75,7 +75,7 @@ func NewFromURL(url string, opts ...Option) (*Client, error) {
 	return newClient(cfg)
 }
 
-// NewFromURLs creates a new regatta client from URLs.
+// NewFromURLs creates a new Armada client from URLs.
 func NewFromURLs(urls []string, opts ...Option) (*Client, error) {
 	cfg := &config{Endpoints: urls}
 	for _, opt := range opts {
@@ -94,7 +94,7 @@ func (c *Client) SetLogger(lg Logger) *Client {
 	return c
 }
 
-// Close shuts down the client's regatta connections.
+// Close shuts down the client's Armada connections.
 func (c *Client) Close() error {
 	defer func() {
 		callHooks(c.cfg.Hooks, func(h HookClientClosed) {
@@ -106,6 +106,15 @@ func (c *Client) Close() error {
 		return toErr(c.ctx, c.conn.Close())
 	}
 	return c.ctx.Err()
+}
+
+// UpdateAuthToken updates the configured request auth token.
+func (c *Client) UpdateAuthToken(token string) {
+	if c.authTokenBundle == nil {
+		return
+	}
+
+	c.authTokenBundle.UpdateAuthToken(token)
 }
 
 // Ctx is a context for "out of band" messages (e.g., for sending
@@ -132,7 +141,7 @@ func (c *Client) SetEndpoints(eps ...string) {
 	c.resolver.SetEndpoints(eps)
 }
 
-// Sync synchronizes client's endpoints with the known endpoints from the regatta membership.
+// Sync synchronizes client's endpoints with the known endpoints from the Armada membership.
 func (c *Client) Sync(ctx context.Context) error {
 	mresp, err := c.MemberList(ctx)
 	if err != nil {
@@ -145,7 +154,7 @@ func (c *Client) Sync(ctx context.Context) error {
 		}
 	}
 	c.SetEndpoints(eps...)
-	c.lg.Debugf("set regatta endpoints by autoSync %v", eps)
+	c.lg.Debugf("set Armada endpoints by autoSync %v", eps)
 	return nil
 }
 
@@ -296,9 +305,22 @@ func newClient(cfg *config) (*Client, error) {
 	if len(cfg.Endpoints) == 0 {
 		return nil, ErrNoAvailableEndpoints
 	}
-	var creds grpccredentials.TransportCredentials
-	if cfg.TLS != nil {
-		creds = credentials.NewBundle(credentials.Config{TLSConfig: cfg.TLS}).TransportCredentials()
+	var (
+		creds           grpccredentials.TransportCredentials
+		authTokenBundle credentials.Bundle
+	)
+	if cfg.TLS != nil || cfg.Auth.hasPerRPCCredentials() {
+		credentialConfig := credentials.Config{TLSConfig: cfg.TLS}
+		if cfg.Auth != nil {
+			credentialConfig = cfg.Auth.credentialConfig()
+			credentialConfig.TLSConfig = cfg.TLS
+		}
+
+		bundle := credentials.NewBundle(credentialConfig)
+		creds = bundle.TransportCredentials()
+		if cfg.Auth.hasPerRPCCredentials() {
+			authTokenBundle = bundle
+		}
 	}
 
 	// use a temporary skeleton client to bootstrap first connection
@@ -309,12 +331,13 @@ func newClient(cfg *config) (*Client, error) {
 
 	ctx, cancel := context.WithCancel(baseCtx)
 	client := &Client{
-		conn:     nil,
-		cfg:      *cfg,
-		creds:    creds,
-		ctx:      ctx,
-		cancel:   cancel,
-		callOpts: defaultCallOpts,
+		conn:            nil,
+		cfg:             *cfg,
+		creds:           creds,
+		ctx:             ctx,
+		cancel:          cancel,
+		callOpts:        defaultCallOpts,
+		authTokenBundle: authTokenBundle,
 	}
 
 	if cfg.Logger != nil {

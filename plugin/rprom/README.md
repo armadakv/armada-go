@@ -1,7 +1,7 @@
 Prometheus plugin
 ---
 
-Provides [Prometheus](https://prometheus.io) metrics for Regatta Go client.
+Provides [Prometheus](https://prometheus.io) metrics for Armada Go client.
 
 ### Metrics
 

@@ -6,14 +6,14 @@ import (
 	"math"
 	"time"
 
-	"github.com/jamf/regatta-go/internal/snappy"
+	"github.com/armadakv/armada-go/internal/snappy"
 	"google.golang.org/grpc"
 )
 
 var (
 	// client-side handling retrying of request failures where data was not written to the wire or
 	// where server indicates it did not process the data. gRPC default is "WaitForReady(false)"
-	// but for regatta we default to "WaitForReady(true)" to minimize client request error responses due to
+	// but for Armada we default to "WaitForReady(true)" to minimize client request error responses due to
 	// transient failures.
 	defaultWaitForReady = grpc.WaitForReady(true)
 

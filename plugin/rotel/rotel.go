@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"unicode/utf8"
 
-	client "github.com/jamf/regatta-go"
+	client "github.com/armadakv/armada-go"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
@@ -15,7 +15,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-const instrumentationName = "github.com/jamf/regatta-go/plugin/rotel"
+const instrumentationName = "github.com/armadakv/armada-go/plugin/rotel"
 
 // NewTracing returns a new Tracing that adds opentelemetry tracing to the client.
 func NewTracing(opts ...Opt) *Tracing {
@@ -43,7 +43,7 @@ type Tracing struct {
 func (t *Tracing) OnKVCall(ctx context.Context, table string, op client.Op, fn client.KvDo) (client.OpResponse, error) {
 	// Set up the span options.
 	attrs := []attribute.KeyValue{
-		semconv.DBSystemKey.String("regatta"),
+		semconv.DBSystemKey.String("armada"),
 		semconv.DBName(table),
 	}
 	spanName, attrs := t.opAttrs(attrs, op)
@@ -67,26 +67,26 @@ func (t *Tracing) opAttrs(attrs []attribute.KeyValue, op client.Op) (string, []a
 	switch {
 	case op.IsGet():
 		attrs = append(attrs, semconv.DBOperation("get"))
-		attrs = append(attrs, semconv.DBStatement(fmt.Sprintf("regatta.v1.kv/Range key: %s rangeEnd: %s", t.formatKey(op.KeyBytes()), t.formatKey(op.RangeBytes()))))
-		return "regatta/get", attrs
+		attrs = append(attrs, semconv.DBStatement(fmt.Sprintf("armada.v1.kv/Range key: %s rangeEnd: %s", t.formatKey(op.KeyBytes()), t.formatKey(op.RangeBytes()))))
+		return "armada/get", attrs
 	case op.IsIterate():
 		attrs = append(attrs, semconv.DBOperation("iterate"))
-		attrs = append(attrs, semconv.DBStatement(fmt.Sprintf("regatta.v1.kv/IterateRange key: %s rangeEnd: %s", t.formatKey(op.KeyBytes()), t.formatKey(op.RangeBytes()))))
-		return "regatta/iterate", attrs
+		attrs = append(attrs, semconv.DBStatement(fmt.Sprintf("armada.v1.kv/IterateRange key: %s rangeEnd: %s", t.formatKey(op.KeyBytes()), t.formatKey(op.RangeBytes()))))
+		return "armada/iterate", attrs
 	case op.IsPut():
 		attrs = append(attrs, semconv.DBOperation("put"))
-		attrs = append(attrs, semconv.DBStatement(fmt.Sprintf("regatta.v1.kv/Put key: %s", t.formatKey(op.KeyBytes()))))
-		return "regatta/put", attrs
+		attrs = append(attrs, semconv.DBStatement(fmt.Sprintf("armada.v1.kv/Put key: %s", t.formatKey(op.KeyBytes()))))
+		return "armada/put", attrs
 	case op.IsDelete():
 		attrs = append(attrs, semconv.DBOperation("delete"))
-		attrs = append(attrs, semconv.DBStatement(fmt.Sprintf("regatta.v1.kv/DeleteRange key: %s rangeEnd: %s", t.formatKey(op.KeyBytes()), t.formatKey(op.RangeBytes()))))
-		return "regatta/delete", attrs
+		attrs = append(attrs, semconv.DBStatement(fmt.Sprintf("armada.v1.kv/DeleteRange key: %s rangeEnd: %s", t.formatKey(op.KeyBytes()), t.formatKey(op.RangeBytes()))))
+		return "armada/delete", attrs
 	case op.IsTxn():
 		attrs = append(attrs, semconv.DBOperation("txn"))
-		attrs = append(attrs, semconv.DBStatement(fmt.Sprintf("regatta.v1.kv/Txn ops")))
-		return "regatta/txn", attrs
+		attrs = append(attrs, semconv.DBStatement("armada.v1.kv/Txn ops"))
+		return "armada/txn", attrs
 	}
-	return "regatta/unknown", attrs
+	return "armada/unknown", attrs
 }
 
 func (t *Tracing) formatKey(bytes []byte) string {

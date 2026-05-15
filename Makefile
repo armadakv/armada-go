@@ -1,8 +1,8 @@
-LDFLAGS = -X github.com/jamf/regatta-go/client.Version=$(VERSION)
+LDFLAGS = -X github.com/armadakv/armada-go/client.Version=$(VERSION)
 VERSION ?= $(shell git describe --tags --always --dirty)
 CGO_ENABLED ?= 0
-REGATTA_PROTO_SRC_DIR = internal/proto
-REGATTA_PROTO_VERSION = v0.5.0
+ARMADA_PROTO_SRC_DIR = internal/proto
+ARMADA_PROTO_VERSION = v0.10.0
 
 .PHONY: all
 all: getproto test build
@@ -20,11 +20,10 @@ build:
 .PHONY: getproto-cleanup
 # Cleanup temporary directory
 getproto-cleanup:
-	rm -Rf ${REGATTA_PROTO_SRC_DIR}
+	rm -Rf ${ARMADA_PROTO_SRC_DIR}
 
 .PHONY: getproto
 getproto: getproto-cleanup
-	mkdir -p ${REGATTA_PROTO_SRC_DIR}
-	curl -sSL https://api.github.com/repos/jamf/regatta/tarball/${REGATTA_PROTO_VERSION} | tar -x --strip-components=2 -C ${REGATTA_PROTO_SRC_DIR} */regattapb/*.pb.go
-
+	mkdir -p ${ARMADA_PROTO_SRC_DIR}
+	curl -sSL https://api.github.com/repos/armadakv/armada/tarball/${ARMADA_PROTO_VERSION} | tar -x --strip-components=2 -C ${ARMADA_PROTO_SRC_DIR} */armadapb/*.pb.go
 

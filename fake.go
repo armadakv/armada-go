@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"net"
 
-	regattapb "github.com/jamf/regatta-go/internal/proto"
+	regattapb "github.com/armadakv/armada-go/internal/proto"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/test/bufconn"
@@ -153,7 +153,7 @@ func (f *fakeKVServer) Txn(_ context.Context, req *regattapb.TxnRequest) (*regat
 	}, nil
 }
 
-// FakeClient provides a fake regatta client. This client is intended to be used only in tests.
+// FakeClient provides a fake Armada client. This client is intended to be used only in tests.
 type FakeClient struct {
 	listener *bufconn.Listener
 	kvServer *fakeKVServer
@@ -171,7 +171,7 @@ func NewFake(fakeResponses ...FakeResponse) (*FakeClient, context.CancelFunc) {
 	return &FakeClient{listener: l, kvServer: fs}, srv.Stop
 }
 
-// Client returns a new instance of regatta client targeting the fake regatta server.
+// Client returns a new instance of Armada client targeting the fake server.
 func (c *FakeClient) Client() *Client {
 	cl, err := NewFromURL("fake", WithDialOptions(grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithContextDialer(func(ctx context.Context, s string) (net.Conn, error) {
 		return c.listener.Dial()

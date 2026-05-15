@@ -6,7 +6,7 @@ import (
 	"context"
 	"time"
 
-	client "github.com/jamf/regatta-go"
+	client "github.com/armadakv/armada-go"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"google.golang.org/grpc/stats"
@@ -102,7 +102,7 @@ func (m *Metrics) OnNewClient(_ *client.Client) {
 		Subsystem:   subsystem,
 		ConstLabels: constLabels,
 		Name:        "request_duration_seconds",
-		Help:        "Time spent executing Regatta KV operation",
+		Help:        "Time spent executing Armada KV operation",
 		Buckets:     getHistogramBuckets(ReadTime),
 	}, []string{"table", "op"})
 
@@ -111,7 +111,7 @@ func (m *Metrics) OnNewClient(_ *client.Client) {
 		Subsystem:   subsystem,
 		ConstLabels: constLabels,
 		Name:        "request_errors_total",
-		Help:        "Total number of errors while executing KV operation",
+		Help:        "Total number of errors while executing Armada KV operation",
 	}, []string{"table", "op"})
 }
 

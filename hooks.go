@@ -8,7 +8,7 @@ import (
 	"google.golang.org/grpc/stats"
 )
 
-// Hook is a hook to be called when something happens in regatta-go.
+// Hook is a hook to be called when something happens in armada-go.
 //
 // The base Hook interface is useless, but wherever a hook can occur in kgo,
 // the client checks if your hook implements an appropriate interface. If so,

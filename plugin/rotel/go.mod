@@ -1,19 +1,21 @@
-module github.com/jamf/regatta-go/plugin/rotel
+module github.com/armadakv/armada-go/plugin/rotel
 
 go 1.22
 
 toolchain go1.22.2
 
 require (
-	github.com/jamf/regatta-go v0.4.3
+	github.com/armadakv/armada-go v0.0.0
 	go.opentelemetry.io/otel v1.27.0
 	go.opentelemetry.io/otel/trace v1.27.0
 )
 
+replace github.com/armadakv/armada-go => ../..
+
 require (
 	github.com/go-logr/logr v1.4.2 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
-	github.com/klauspost/compress v1.17.8 // indirect
+	github.com/klauspost/compress v1.17.9 // indirect
 	github.com/planetscale/vtprotobuf v0.6.0 // indirect
 	go.opentelemetry.io/otel/metric v1.27.0 // indirect
 	golang.org/x/net v0.26.0 // indirect

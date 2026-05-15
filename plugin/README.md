@@ -11,7 +11,7 @@ This directory contains plug-in support for external libraries to use with a `Cl
 └── <a href="./rzap">rzap</a> — plug-in uber-go/zap logging lib
 </pre>
 
-These plugins can be enabled by using [Client.WithHooks](https://pkg.go.dev/github.com/jamf/regatta-go?utm_source=godoc#WithHooks) function in your 
+These plugins can be enabled by using [Client.WithHooks](https://pkg.go.dev/github.com/armadakv/armada-go?utm_source=godoc#WithHooks) function in your 
 GO application. For example:
 
 ```

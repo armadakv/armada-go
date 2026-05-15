@@ -56,8 +56,8 @@ const (
 	WriteTime                  // Enables {ns}_{ss}_write_time_seconds.
 )
 
-// DefNamespace is the default namespace for the metrics
-const DefNamespace = "regatta"
+// DefNamespace is the default namespace for the metrics.
+const DefNamespace = "armada"
 
 // HistogramOpts allows histograms to be enabled with custom buckets
 type HistogramOpts struct {
@@ -70,7 +70,7 @@ type RegistererGatherer interface {
 	prometheus.Gatherer
 }
 
-// Namespace sets the Prometheus namespace for exposed metrics, overriding the default "regatta" namespace
+// Namespace sets the Prometheus namespace for exposed metrics, overriding the default "armada" namespace.
 func Namespace(namespace string) Opt {
 	return opt{func(c *cfg) {
 		c.namespace = namespace
